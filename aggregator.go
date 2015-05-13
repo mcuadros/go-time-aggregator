@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type Period int64
+type Period uint64
 
 type TimeAggregator struct {
 	Values  map[Period]*Aggregator
@@ -22,7 +22,7 @@ func NewTimeAggregator(p ...PeriodDefinition) *TimeAggregator {
 }
 
 func (a *TimeAggregator) Add(date time.Time, value int64) {
-	p := a.periods.calc(date)
+	p := a.periods.pack(date)
 
 	if _, ok := a.Values[p]; !ok {
 		a.Values[p] = a.buildAggregator()
@@ -32,7 +32,7 @@ func (a *TimeAggregator) Add(date time.Time, value int64) {
 }
 
 func (a *TimeAggregator) Get(date time.Time) int64 {
-	p := a.periods.calc(date)
+	p := a.periods.pack(date)
 
 	if _, ok := a.Values[p]; !ok {
 		return -1

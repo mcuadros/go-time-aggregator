@@ -6,7 +6,7 @@ import (
 
 type PeriodDefinition struct {
 	size int8
-	pad  int64
+	pad  uint64
 	name string
 	cast func(date time.Time) Period
 }
@@ -49,25 +49,27 @@ var Weekday = PeriodDefinition{
 
 type periodDefinitions []PeriodDefinition
 
-func (p periodDefinitions) calc(date time.Time) Period {
-	var t Period
+func (p periodDefinitions) pack(date time.Time) Period {
+	t := Period(1)
 	for _, p := range p[:len(p)-1] {
-		t += (p.cast(date) * Period(p.pad))
+		t *= Period(p.pad)
+		t += p.cast(date)
 	}
 
 	return t
 }
 
-/*
+func (p periodDefinitions) unpack(total Period) map[string]uint64 {
+	result := make(map[string]uint64, 0)
+	t := uint64(total)
+	for i := len(p) - 2; i >= 0; i-- {
+		result[p[i].name] = t % p[i].pad
+		t = t / p[i].pad
+	}
 
-func (p periodDefinitions) extract(date time.Time) map[string]int64 {
-    result := make(map[string]int64, 0)
+	if t != 1 {
+		panic("Malformed period")
+	}
 
-    for _, p := range p[:len(p)-1] {
-        result[p.name] =
-    }
-
-    fmt.Println("period", t)
-
-    return t
-}*/
+	return result
+}
