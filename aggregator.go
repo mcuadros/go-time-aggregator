@@ -3,34 +3,33 @@ package ta
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"io"
 	"time"
 )
 
+var InvalidOrderError = errors.New("Invalid order of time units")
+
 type TimeAggregator struct {
-	Values  map[Period]*Aggregator
-	periods []PeriodDefinition
-	flags   unit
+	Values map[Period]*aggregator
+	kind   unit
+	flags  unit
 }
 
-func NewTimeAggregator(units ...unit) *TimeAggregator {
-	f := unit(0)
-	p := make([]PeriodDefinition, 0)
-	for _, u := range units {
-		f |= u
-		p = append(p, defs[u])
+func NewTimeAggregator(units ...unit) (*TimeAggregator, error) {
+	if !unitsAreSorted(units) {
+		return nil, InvalidOrderError
 	}
 
 	return &TimeAggregator{
-		Values:  make(map[Period]*Aggregator, 0),
-		periods: p,
-		flags:   f,
-	}
+		Values: make(map[Period]*aggregator, 0),
+		kind:   units[len(units)-1],
+		flags:  unitsToFlag(units),
+	}, nil
 }
 
 func (a *TimeAggregator) Add(date time.Time, value int64) {
 	p := pack(a.flags, date)
-
 	if _, ok := a.Values[p]; !ok {
 		a.Values[p] = a.buildAggregator()
 	}
@@ -48,8 +47,8 @@ func (a *TimeAggregator) Get(date time.Time) int64 {
 	return a.Values[p].Get(date)
 }
 
-func (a *TimeAggregator) buildAggregator() *Aggregator {
-	return NewAggregator(a.periods[len(a.periods)-1])
+func (a *TimeAggregator) buildAggregator() *aggregator {
+	return newAggregator(a.kind)
 }
 
 func (a *TimeAggregator) Marshal() []byte {
@@ -78,36 +77,34 @@ func (a *TimeAggregator) Unmarshal(v []byte) error {
 
 		a.Values[p] = a.buildAggregator()
 		if err := a.Values[p].Unmarshal(buf); err != nil {
-
 			return err
 		}
-
 	}
 
 	return nil
 }
 
-type Aggregator struct {
+type aggregator struct {
 	values []int64
-	p      PeriodDefinition
+	p      periodDefinition
 }
 
-func NewAggregator(p PeriodDefinition) *Aggregator {
-	return &Aggregator{
-		values: make([]int64, p.size),
-		p:      p,
+func newAggregator(u unit) *aggregator {
+	return &aggregator{
+		values: make([]int64, defs[u].size),
+		p:      defs[u],
 	}
 }
 
-func (a *Aggregator) Add(date time.Time, value int64) {
+func (a *aggregator) Add(date time.Time, value int64) {
 	a.values[a.p.cast(date)] += value
 }
 
-func (a *Aggregator) Get(date time.Time) int64 {
+func (a *aggregator) Get(date time.Time) int64 {
 	return a.values[a.p.cast(date)]
 }
 
-func (a *Aggregator) Marshal() []byte {
+func (a *aggregator) Marshal() []byte {
 	buf := new(bytes.Buffer)
 
 	for _, v := range a.values {
@@ -117,7 +114,7 @@ func (a *Aggregator) Marshal() []byte {
 	return buf.Bytes()
 }
 
-func (a *Aggregator) Unmarshal(r io.Reader) error {
+func (a *aggregator) Unmarshal(r io.Reader) error {
 	for i, _ := range a.values {
 		err := binary.Read(r, binary.LittleEndian, &a.values[i])
 		if err != nil {
@@ -126,4 +123,26 @@ func (a *Aggregator) Unmarshal(r io.Reader) error {
 	}
 
 	return nil
+}
+
+func unitsAreSorted(units []unit) bool {
+	var p unit
+	for _, u := range units {
+		if p != 0 && u < p {
+			return false
+		}
+
+		p = u
+	}
+
+	return true
+}
+
+func unitsToFlag(units []unit) unit {
+	f := unit(0)
+	for _, u := range units {
+		f |= u
+	}
+
+	return f
 }

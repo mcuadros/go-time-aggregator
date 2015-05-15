@@ -13,51 +13,95 @@ const (
 	Month
 	Week
 	Day
+	YearDay
+	Weekday
 	Hour
 	Minute
 	Second
-	Weekday
 )
 
-type PeriodDefinition struct {
-	size int8
+const binaryVersion uint64 = 1
+
+type periodDefinition struct {
+	size int16
 	pad  uint64
 	name string
-	cast func(date time.Time) Period
+	cast func(date time.Time) int
 }
 
 var units = []unit{Year, Month, Week, Day, Hour, Minute, Second, Weekday}
-var defs = map[unit]PeriodDefinition{
-	Year: PeriodDefinition{
+var defs = map[unit]periodDefinition{
+	Year: {
 		size: -1,
 		pad:  1e4,
 		name: "year",
-		cast: func(date time.Time) Period {
-			return Period(date.Year())
+		cast: func(d time.Time) int {
+			return d.Year()
 		},
 	},
-	Month: PeriodDefinition{
+	Month: {
 		size: 12,
 		pad:  1e2,
 		name: "month",
-		cast: func(date time.Time) Period {
-			return Period(date.Month())
+		cast: func(d time.Time) int {
+			return int(d.Month())
 		},
 	},
-	Hour: PeriodDefinition{
+	Week: {
 		size: 24,
 		pad:  1e2,
-		name: "hour",
-		cast: func(date time.Time) Period {
-			return Period(date.Hour())
+		name: "week",
+		cast: func(d time.Time) int {
+			w, _ := d.ISOWeek()
+			return w
 		},
 	},
-	Weekday: PeriodDefinition{
+	Day: {
+		size: 31,
+		pad:  1e3,
+		name: "day",
+		cast: func(d time.Time) int {
+			return d.Day()
+		},
+	},
+	YearDay: {
+		size: 366,
+		pad:  1e3,
+		name: "yearday",
+		cast: func(date time.Time) int {
+			return date.YearDay()
+		},
+	},
+	Weekday: {
 		size: 7,
 		pad:  1e1,
 		name: "weekday",
-		cast: func(date time.Time) Period {
-			return Period(date.Weekday())
+		cast: func(date time.Time) int {
+			return int(date.Weekday())
+		},
+	},
+	Hour: {
+		size: 24,
+		pad:  1e2,
+		name: "hour",
+		cast: func(d time.Time) int {
+			return d.Hour()
+		},
+	},
+	Minute: {
+		size: 60,
+		pad:  1e2,
+		name: "minute",
+		cast: func(d time.Time) int {
+			return d.Minute()
+		},
+	},
+	Second: {
+		size: 60,
+		pad:  1e2,
+		name: "second",
+		cast: func(d time.Time) int {
+			return d.Second()
 		},
 	},
 }
@@ -65,16 +109,16 @@ var defs = map[unit]PeriodDefinition{
 func pack(flag unit, date time.Time) Period {
 	us := getUnitsFromFlag(flag)
 
-	t := Period(1)
+	t := binaryVersion
 	for _, u := range us[:len(us)-1] {
-		t *= Period(defs[u].pad)
-		t += defs[u].cast(date)
+		t *= defs[u].pad
+		t += uint64(defs[u].cast(date))
 	}
 
 	t *= 1e3
-	t += Period(flag)
+	t += uint64(flag)
 
-	return t
+	return Period(t)
 }
 
 func unpack(total Period) map[string]uint64 {
@@ -90,7 +134,7 @@ func unpack(total Period) map[string]uint64 {
 		t = t / def.pad
 	}
 
-	if t != 1 {
+	if t != binaryVersion {
 		panic("Malformed period")
 	}
 
