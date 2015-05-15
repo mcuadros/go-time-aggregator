@@ -7,22 +7,29 @@ import (
 	"time"
 )
 
-type Period uint64
-
 type TimeAggregator struct {
 	Values  map[Period]*Aggregator
-	periods periodDefinitions
+	periods []PeriodDefinition
+	flags   unit
 }
 
-func NewTimeAggregator(p ...PeriodDefinition) *TimeAggregator {
+func NewTimeAggregator(units ...unit) *TimeAggregator {
+	f := unit(0)
+	p := make([]PeriodDefinition, 0)
+	for _, u := range units {
+		f |= u
+		p = append(p, defs[u])
+	}
+
 	return &TimeAggregator{
 		Values:  make(map[Period]*Aggregator, 0),
-		periods: periodDefinitions(p),
+		periods: p,
+		flags:   f,
 	}
 }
 
 func (a *TimeAggregator) Add(date time.Time, value int64) {
-	p := a.periods.pack(date)
+	p := pack(a.flags, date)
 
 	if _, ok := a.Values[p]; !ok {
 		a.Values[p] = a.buildAggregator()
@@ -32,7 +39,7 @@ func (a *TimeAggregator) Add(date time.Time, value int64) {
 }
 
 func (a *TimeAggregator) Get(date time.Time) int64 {
-	p := a.periods.pack(date)
+	p := pack(a.flags, date)
 
 	if _, ok := a.Values[p]; !ok {
 		return -1
