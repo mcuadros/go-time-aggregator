@@ -18,25 +18,6 @@ func (s *UtilsSuite) TestNewTimeAggregator(c *C) {
 	c.Assert(err, Equals, InvalidOrderError)
 }
 
-func (s *UtilsSuite) TestTimeAggregator_Add(c *C) {
-	d := time.Now()
-
-	a, _ := NewTimeAggregator(Year, Hour)
-	a.Add(d, 10)
-	a.Add(d, 10)
-
-	c.Assert(a.Values, HasLen, 1)
-	c.Assert(a.Get(d), Equals, int64(20))
-
-	m := a.Marshal()
-
-	b, _ := NewTimeAggregator(Year, Hour)
-	err := b.Unmarshal(m)
-	c.Assert(err, IsNil)
-	c.Assert(b.Values, HasLen, 1)
-	c.Assert(b.Get(d), Equals, int64(20))
-}
-
 func (s *UtilsSuite) TestTimeAggregator_Add_YearHour(c *C) {
 	a, _ := NewTimeAggregator(Year, Hour)
 	a.Add(date2014November, 15)
@@ -82,6 +63,27 @@ func (s *UtilsSuite) TestTimeAggregator_Add_Only(c *C) {
 	c.Assert(a.Values, HasLen, 1)
 	c.Assert(a.Get(date2015November), Equals, int64(30))
 	c.Assert(a.Get(h21), Equals, int64(40))
+}
+
+func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshal(c *C) {
+	d := time.Now()
+
+	a, _ := NewTimeAggregator(Year, Hour)
+	a.Add(d, 10)
+	a.Add(d, 10)
+
+	c.Assert(a.Values, HasLen, 1)
+	c.Assert(a.Get(d), Equals, int64(20))
+
+	m := a.Marshal()
+
+	b := &TimeAggregator{}
+	err := b.Unmarshal(m)
+
+	c.Assert(err, IsNil)
+	c.Assert(a.flags, Equals, b.flags)
+	c.Assert(b.Values, HasLen, 1)
+	c.Assert(b.Get(d), Equals, int64(20))
 }
 
 var date2013December = time.Date(2013, time.December, 12, 23, 59, 59, 0, time.UTC)

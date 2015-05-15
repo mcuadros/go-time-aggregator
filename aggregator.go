@@ -29,7 +29,7 @@ func NewTimeAggregator(units ...unit) (*TimeAggregator, error) {
 }
 
 func (a *TimeAggregator) Add(date time.Time, value int64) {
-	p := pack(a.flags, date)
+	p := NewPeriod(a.flags, date)
 	if _, ok := a.Values[p]; !ok {
 		a.Values[p] = a.buildAggregator()
 	}
@@ -38,7 +38,7 @@ func (a *TimeAggregator) Add(date time.Time, value int64) {
 }
 
 func (a *TimeAggregator) Get(date time.Time) int64 {
-	p := pack(a.flags, date)
+	p := NewPeriod(a.flags, date)
 
 	if _, ok := a.Values[p]; !ok {
 		return -1
@@ -63,8 +63,9 @@ func (a *TimeAggregator) Marshal() []byte {
 }
 
 func (a *TimeAggregator) Unmarshal(v []byte) error {
-	buf := bytes.NewBuffer(v)
+	a.Values = make(map[Period]*aggregator, 0)
 
+	buf := bytes.NewBuffer(v)
 	for {
 		var p Period
 		if err := binary.Read(buf, binary.LittleEndian, &p); err != nil {
@@ -73,6 +74,12 @@ func (a *TimeAggregator) Unmarshal(v []byte) error {
 			}
 
 			return err
+		}
+
+		if a.flags == 0 {
+			a.flags = p.Flag()
+			us := p.Units()
+			a.kind = us[len(us)-1]
 		}
 
 		a.Values[p] = a.buildAggregator()

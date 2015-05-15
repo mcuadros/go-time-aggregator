@@ -4,8 +4,6 @@ import (
 	"time"
 )
 
-type Period uint64
-
 type unit int
 
 const (
@@ -106,7 +104,9 @@ var defs = map[unit]periodDefinition{
 	},
 }
 
-func pack(flag unit, date time.Time) Period {
+type Period uint64
+
+func NewPeriod(flag unit, date time.Time) Period {
 	us := getUnitsFromFlag(flag)
 
 	t := binaryVersion
@@ -121,10 +121,10 @@ func pack(flag unit, date time.Time) Period {
 	return Period(t)
 }
 
-func unpack(total Period) map[string]uint64 {
-	t := uint64(total)
+func (p Period) ToMap() map[string]uint64 {
+	t := uint64(p)
 
-	us := getUnitsFromFlag(unit(t % 1e3))
+	us := p.Units()
 	t = t / 1e3
 
 	result := make(map[string]uint64, 0)
@@ -139,6 +139,14 @@ func unpack(total Period) map[string]uint64 {
 	}
 
 	return result
+}
+
+func (p Period) Flag() unit {
+	return unit(uint64(p) % 1e3)
+}
+
+func (p Period) Units() []unit {
+	return getUnitsFromFlag(p.Flag())
 }
 
 func getUnitsFromFlag(flag unit) []unit {
