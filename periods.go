@@ -110,7 +110,7 @@ var defs = map[unit]periodDefinition{
 
 type Period uint64
 
-func NewPeriod(flag unit, date time.Time) Period {
+func newPeriod(flag unit, date time.Time) Period {
 	us := getUnitsFromFlag(flag)
 
 	t := binaryVersion
@@ -125,6 +125,7 @@ func NewPeriod(flag unit, date time.Time) Period {
 	return Period(t)
 }
 
+// ToMap returns a map representation of this period
 func (p Period) ToMap() map[string]uint64 {
 	t := uint64(p)
 
@@ -145,12 +146,13 @@ func (p Period) ToMap() map[string]uint64 {
 	return result
 }
 
-func (p Period) Flag() unit {
+func (p Period) flag() unit {
 	return unit(uint64(p) % 1e3)
 }
 
+// Units returns a slice of the units of the period
 func (p Period) Units() []unit {
-	return getUnitsFromFlag(p.Flag())
+	return getUnitsFromFlag(p.flag())
 }
 
 func getUnitsFromFlag(flag unit) []unit {

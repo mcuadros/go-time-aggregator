@@ -5,7 +5,7 @@ import (
 )
 
 func (s *UtilsSuite) Test_NewPeriod(c *C) {
-	p := NewPeriod(Year|Month|Hour, date2015November)
+	p := newPeriod(Year|Month|Hour, date2015November)
 	c.Assert(p, Equals, Period(1201511067))
 }
 

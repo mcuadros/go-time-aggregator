@@ -8,7 +8,10 @@ import (
 	"time"
 )
 
-var InvalidOrderError = errors.New("Invalid order of time units")
+var (
+	InvalidOrderError = errors.New("Invalid order of time units")
+	UnitsMismatch     = errors.New("Units mismatch")
+)
 
 type TimeAggregator struct {
 	Values map[Period]*aggregator
@@ -16,6 +19,8 @@ type TimeAggregator struct {
 	flags  unit
 }
 
+// NewTimeAggregator returns a new TimeAggregator configured with the given
+// units, InvalidOrderError is return if the units are not sorted
 func NewTimeAggregator(units ...unit) (*TimeAggregator, error) {
 	if !unitsAreSorted(units) {
 		return nil, InvalidOrderError
@@ -28,8 +33,9 @@ func NewTimeAggregator(units ...unit) (*TimeAggregator, error) {
 	}, nil
 }
 
+// Add sum a value to the correct count using date
 func (a *TimeAggregator) Add(date time.Time, value int64) {
-	p := NewPeriod(a.flags, date)
+	p := newPeriod(a.flags, date)
 	if _, ok := a.Values[p]; !ok {
 		a.Values[p] = a.buildAggregator()
 	}
@@ -37,8 +43,9 @@ func (a *TimeAggregator) Add(date time.Time, value int64) {
 	a.Values[p].Add(date, value)
 }
 
+// Get returns the count for the given date
 func (a *TimeAggregator) Get(date time.Time) int64 {
-	p := NewPeriod(a.flags, date)
+	p := newPeriod(a.flags, date)
 
 	if _, ok := a.Values[p]; !ok {
 		return -1
@@ -47,10 +54,28 @@ func (a *TimeAggregator) Get(date time.Time) int64 {
 	return a.Values[p].Get(date)
 }
 
+// Sum sum a TimeAggregator to other, if the units are diferent UnitsMismatch
+// error is returned
+func (a *TimeAggregator) Sum(b *TimeAggregator) error {
+	if a.flags != b.flags {
+		return UnitsMismatch
+	}
+	for p, v := range b.Values {
+		if _, ok := a.Values[p]; !ok {
+			a.Values[p] = v
+		} else {
+			a.Values[p].Sum(v)
+		}
+	}
+
+	return nil
+}
+
 func (a *TimeAggregator) buildAggregator() *aggregator {
 	return newAggregator(a.kind)
 }
 
+// Marshal returns a binary representation of TimeAggregator
 func (a *TimeAggregator) Marshal() []byte {
 	buf := new(bytes.Buffer)
 
@@ -62,6 +87,7 @@ func (a *TimeAggregator) Marshal() []byte {
 	return buf.Bytes()
 }
 
+// Unmarshal a binary string into a TimeAggregator, units and values are restored
 func (a *TimeAggregator) Unmarshal(v []byte) error {
 	a.Values = make(map[Period]*aggregator, 0)
 
@@ -77,7 +103,7 @@ func (a *TimeAggregator) Unmarshal(v []byte) error {
 		}
 
 		if a.flags == 0 {
-			a.flags = p.Flag()
+			a.flags = p.flag()
 			us := p.Units()
 			a.kind = us[len(us)-1]
 		}
@@ -119,6 +145,12 @@ func (a *aggregator) Get(date time.Time) int64 {
 	}
 
 	return a.values[key]
+}
+
+func (a *aggregator) Sum(b *aggregator) {
+	for i, value := range b.values {
+		a.values[i] += value
+	}
 }
 
 func (a *aggregator) Marshal() []byte {

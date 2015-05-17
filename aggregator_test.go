@@ -65,15 +65,20 @@ func (s *UtilsSuite) TestTimeAggregator_Add_Only(c *C) {
 	c.Assert(a.Get(h21), Equals, int64(40))
 }
 
-func (s *UtilsSuite) TestTimeAggregator_Month(c *C) {
-	a, _ := NewTimeAggregator(Month)
+func (s *UtilsSuite) TestTimeAggregator_Sum(c *C) {
+	a, _ := NewTimeAggregator(Year, Month)
 	a.Add(date2014November, 10)
-	a.Add(date2015November, 10)
 	a.Add(date2015December, 10)
 
-	c.Assert(a.Values, HasLen, 1)
-	c.Assert(a.Get(date2015November), Equals, int64(20))
-	c.Assert(a.Get(date2015December), Equals, int64(10))
+	b, _ := NewTimeAggregator(Year, Month)
+	b.Add(date2015January, 10)
+	b.Add(date2015December, 10)
+
+	c.Assert(a.Sum(b), IsNil)
+	c.Assert(a.Values, HasLen, 2)
+	c.Assert(a.Get(date2015January), Equals, int64(10))
+	c.Assert(a.Get(date2014November), Equals, int64(10))
+	c.Assert(a.Get(date2015December), Equals, int64(20))
 }
 
 func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshal(c *C) {
