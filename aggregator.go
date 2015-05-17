@@ -104,11 +104,21 @@ func newAggregator(u unit) *aggregator {
 }
 
 func (a *aggregator) Add(date time.Time, value int64) {
-	a.values[a.p.cast(date)] += value
+	key := a.p.cast(date)
+	if a.p.zero {
+		key--
+	}
+
+	a.values[key] += value
 }
 
 func (a *aggregator) Get(date time.Time) int64 {
-	return a.values[a.p.cast(date)]
+	key := a.p.cast(date)
+	if a.p.zero {
+		key--
+	}
+
+	return a.values[key]
 }
 
 func (a *aggregator) Marshal() []byte {

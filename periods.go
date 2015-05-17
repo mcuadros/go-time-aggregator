@@ -24,6 +24,7 @@ type periodDefinition struct {
 	size int16
 	pad  uint64
 	name string
+	zero bool
 	cast func(date time.Time) int
 }
 
@@ -41,14 +42,16 @@ var defs = map[unit]periodDefinition{
 		size: 12,
 		pad:  1e2,
 		name: "month",
+		zero: true,
 		cast: func(d time.Time) int {
 			return int(d.Month())
 		},
 	},
 	Week: {
-		size: 24,
+		size: 53,
 		pad:  1e2,
 		name: "week",
+		zero: true,
 		cast: func(d time.Time) int {
 			w, _ := d.ISOWeek()
 			return w
@@ -66,8 +69,9 @@ var defs = map[unit]periodDefinition{
 		size: 366,
 		pad:  1e3,
 		name: "yearday",
+		zero: true,
 		cast: func(date time.Time) int {
-			return date.YearDay()
+			return date.YearDay() - 1
 		},
 	},
 	Weekday: {
