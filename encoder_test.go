@@ -1,6 +1,8 @@
 package aggregator
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
 
@@ -62,4 +64,33 @@ func (s *UtilsSuite) Test_TimeAggregator_MarshalJSON(c *C) {
 		Equals,
 		`[[{"year":2013},[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10]]]`,
 	)
+}
+
+func (s *UtilsSuite) Test_TimeAggregator_Gob(c *C) {
+	ta1, _ := NewTimeAggregator(Year, Hour)
+	ta1.Add(date2013December, 10)
+
+	var (
+		buf bytes.Buffer
+		err error
+	)
+
+	enc := gob.NewEncoder(&buf)
+	err = enc.Encode(ta1)
+	c.Assert(err, IsNil)
+
+	var ta2 *TimeAggregator
+	dec := gob.NewDecoder(&buf)
+	err = dec.Decode(&ta2)
+	c.Assert(err, IsNil)
+
+	// Can't use `c.Assert(ta1, DeepEquals, ta2)` because it errors out.
+	// Comparing closures is not straightforward.
+	for p, a := range ta2.Values {
+		c.Assert(a.values, DeepEquals, ta1.Values[p].values)
+		c.Assert(a.p.size, DeepEquals, ta1.Values[p].p.size)
+		c.Assert(a.p.pad, DeepEquals, ta1.Values[p].p.pad)
+		c.Assert(a.p.name, DeepEquals, ta1.Values[p].p.name)
+		c.Assert(a.p.zero, DeepEquals, ta1.Values[p].p.zero)
+	}
 }

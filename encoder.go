@@ -43,3 +43,11 @@ func (a *TimeAggregator) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(v)
 }
+
+func (a *TimeAggregator) GobEncode() ([]byte, error) {
+	return a.Marshal(), nil
+}
+
+func (a *TimeAggregator) GobDecode(body []byte) error {
+	return a.Unmarshal(body)
+}
