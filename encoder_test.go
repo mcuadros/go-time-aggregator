@@ -84,23 +84,13 @@ func (s *UtilsSuite) Test_TimeAggregator_Gob(c *C) {
 	err = dec.Decode(&ta2)
 	c.Assert(err, IsNil)
 
-	// Can't use `c.Assert(ta1, DeepEquals, ta2)` because it doesn't know how to
-	// compare funcs.
-	for p, a := range ta1.Values {
-		c.Assert(a.values, DeepEquals, ta2.Values[p].values)
-		c.Assert(a.p.size, DeepEquals, ta2.Values[p].p.size)
-		c.Assert(a.p.pad, DeepEquals, ta2.Values[p].p.pad)
-		c.Assert(a.p.name, DeepEquals, ta2.Values[p].p.name)
-		c.Assert(a.p.zero, DeepEquals, ta2.Values[p].p.zero)
-		// c.Assert(a.p.cast, DeepEquals, ta2.Values[p].p.cast)
-	}
-
+	// Can't use `c.Assert(ta1, DeepEquals, ta2)` because it errors out.
+	// Comparing closures is not straightforward.
 	for p, a := range ta2.Values {
 		c.Assert(a.values, DeepEquals, ta1.Values[p].values)
 		c.Assert(a.p.size, DeepEquals, ta1.Values[p].p.size)
 		c.Assert(a.p.pad, DeepEquals, ta1.Values[p].p.pad)
 		c.Assert(a.p.name, DeepEquals, ta1.Values[p].p.name)
 		c.Assert(a.p.zero, DeepEquals, ta1.Values[p].p.zero)
-		// c.Assert(a.p.cast, DeepEquals, ta1.Values[p].p.cast)
 	}
 }
