@@ -3,7 +3,7 @@ package aggregator
 import (
 	"encoding/json"
 
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // GetBSON implements bson.Setter, marshall the a TimeAggregator to a string
