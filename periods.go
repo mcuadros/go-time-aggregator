@@ -1,8 +1,6 @@
 package aggregator
 
-import (
-	"time"
-)
+import "time"
 
 type unit int
 
@@ -71,7 +69,7 @@ var defs = map[unit]periodDefinition{
 		name: "yearday",
 		zero: true,
 		cast: func(date time.Time) int {
-			return date.YearDay() - 1
+			return date.YearDay()
 		},
 	},
 	Weekday: {
