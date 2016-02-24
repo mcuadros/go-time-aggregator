@@ -61,7 +61,7 @@ func (s *UtilsSuite) Test_TimeAggregator_MarshalJSON(c *C) {
 	c.Assert(
 		string(b),
 		Equals,
-		`[[{"year":2013},[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10]]]`,
+		`[[{"hour":23,"year":2013},[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10]]]`,
 	)
 }
 

@@ -26,7 +26,7 @@ type periodDefinition struct {
 	cast func(date time.Time) int
 }
 
-var units = []unit{Year, Month, Week, Day, Hour, Minute, Second, Weekday}
+var units = []unit{Year, Month, Week, Day, YearDay, Weekday, Hour, Minute, Second}
 var defs = map[unit]periodDefinition{
 	Year: {
 		size: -1,
@@ -64,10 +64,9 @@ var defs = map[unit]periodDefinition{
 		},
 	},
 	YearDay: {
-		size: 367,
+		size: 366,
 		pad:  1e3,
 		name: "yearday",
-		zero: true,
 		cast: func(date time.Time) int {
 			return date.YearDay()
 		},
@@ -112,7 +111,7 @@ func newPeriod(flag unit, date time.Time) Period {
 	us := getUnitsFromFlag(flag)
 
 	t := binaryVersion
-	for _, u := range us[:len(us)-1] {
+	for _, u := range us[:len(us)] {
 		t *= defs[u].pad
 		t += uint64(defs[u].cast(date))
 	}
@@ -131,7 +130,7 @@ func (p Period) ToMap() map[string]uint64 {
 	t = t / 1e3
 
 	result := make(map[string]uint64, 0)
-	for i := len(us) - 2; i >= 0; i-- {
+	for i := len(us) - 1; i >= 0; i-- {
 		def := defs[us[i]]
 		result[def.name] = t % def.pad
 		t = t / def.pad

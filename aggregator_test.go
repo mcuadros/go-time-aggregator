@@ -60,7 +60,7 @@ func (s *UtilsSuite) TestTimeAggregator_Add_Only(c *C) {
 	h21 := time.Date(2015, time.November, 1, 21, 1, 1, 0, time.UTC)
 	a.Add(h21, 40)
 
-	c.Assert(a.Values, HasLen, 1)
+	c.Assert(a.Values, HasLen, 2)
 	c.Assert(a.Get(date2015November), Equals, int64(30))
 	c.Assert(a.Get(h21), Equals, int64(40))
 }
@@ -75,13 +75,13 @@ func (s *UtilsSuite) TestTimeAggregator_Sum(c *C) {
 	b.Add(date2015December, 10)
 
 	c.Assert(a.Sum(b), IsNil)
-	c.Assert(a.Values, HasLen, 2)
+	c.Assert(a.Values, HasLen, 3)
 	c.Assert(a.Get(date2015January), Equals, int64(10))
 	c.Assert(a.Get(date2014November), Equals, int64(10))
 	c.Assert(a.Get(date2015December), Equals, int64(20))
 }
 
-func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshal(c *C) {
+func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshalHour(c *C) {
 	d := time.Now()
 
 	a, _ := NewTimeAggregator(Year, Hour)
@@ -97,6 +97,27 @@ func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshal(c *C) {
 	err := b.Unmarshal(m)
 
 	c.Assert(err, IsNil)
+	c.Assert(a.flags, Equals, b.flags)
+	c.Assert(b.Values, HasLen, 1)
+	c.Assert(b.Get(d), Equals, int64(20))
+}
+
+func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshalYearday(c *C) {
+	d := time.Now()
+
+	a, _ := NewTimeAggregator(Year, YearDay)
+	a.Add(d, 10)
+	a.Add(d, 10)
+
+	c.Assert(a.Values, HasLen, 1)
+	c.Assert(a.Get(d), Equals, int64(20))
+	m := a.Marshal()
+
+	b := &TimeAggregator{}
+	err := b.Unmarshal(m)
+
+	c.Assert(err, IsNil)
+
 	c.Assert(a.flags, Equals, b.flags)
 	c.Assert(b.Values, HasLen, 1)
 	c.Assert(b.Get(d), Equals, int64(20))

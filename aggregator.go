@@ -105,6 +105,7 @@ func (a *TimeAggregator) Unmarshal(v []byte) error {
 		if a.flags == 0 {
 			a.flags = p.flag()
 			us := p.Units()
+
 			a.kind = us[len(us)-1]
 		}
 
