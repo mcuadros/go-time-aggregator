@@ -64,7 +64,7 @@ var defs = map[unit]periodDefinition{
 		},
 	},
 	YearDay: {
-		size: 366,
+		size: 367,
 		pad:  1e3,
 		name: "yearday",
 		cast: func(date time.Time) int {

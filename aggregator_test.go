@@ -103,7 +103,7 @@ func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshalHour(c *C) {
 }
 
 func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshalYearday(c *C) {
-	d := time.Now()
+	d := time.Date(2016, time.December, 31, 23, 59, 59, 0, time.UTC)
 
 	a, _ := NewTimeAggregator(Year, YearDay)
 	a.Add(d, 10)
@@ -111,6 +111,7 @@ func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshalYearday(c *C) {
 
 	c.Assert(a.Values, HasLen, 1)
 	c.Assert(a.Get(d), Equals, int64(20))
+
 	m := a.Marshal()
 
 	b := &TimeAggregator{}
