@@ -2,10 +2,10 @@ package aggregator
 
 import "time"
 
-type unit int
+type Unit int
 
 const (
-	Year unit = 1 << iota
+	Year Unit = 1 << iota
 	Month
 	Week
 	Day
@@ -26,8 +26,8 @@ type periodDefinition struct {
 	cast func(date time.Time) int
 }
 
-var units = []unit{Year, Month, Week, Day, YearDay, Weekday, Hour, Minute, Second}
-var defs = map[unit]periodDefinition{
+var units = []Unit{Year, Month, Week, Day, YearDay, Weekday, Hour, Minute, Second}
+var defs = map[Unit]periodDefinition{
 	Year: {
 		size: -1,
 		pad:  1e4,
@@ -107,7 +107,7 @@ var defs = map[unit]periodDefinition{
 
 type Period uint64
 
-func newPeriod(flag unit, date time.Time) Period {
+func newPeriod(flag Unit, date time.Time) Period {
 	us := getUnitsFromFlag(flag)
 
 	t := binaryVersion
@@ -143,17 +143,17 @@ func (p Period) ToMap() map[string]uint64 {
 	return result
 }
 
-func (p Period) flag() unit {
-	return unit(uint64(p) % 1e3)
+func (p Period) flag() Unit {
+	return Unit(uint64(p) % 1e3)
 }
 
 // Units returns a slice of the units of the period
-func (p Period) Units() []unit {
+func (p Period) Units() []Unit {
 	return getUnitsFromFlag(p.flag())
 }
 
-func getUnitsFromFlag(flag unit) []unit {
-	us := make([]unit, 0)
+func getUnitsFromFlag(flag Unit) []Unit {
+	us := make([]Unit, 0)
 	for _, u := range units {
 		if flag&u != 0 {
 			us = append(us, u)

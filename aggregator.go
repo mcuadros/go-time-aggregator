@@ -15,13 +15,13 @@ var (
 
 type TimeAggregator struct {
 	Values map[Period]*aggregator
-	kind   unit
-	flags  unit
+	kind   Unit
+	flags  Unit
 }
 
 // NewTimeAggregator returns a new TimeAggregator configured with the given
 // units, InvalidOrderError is return if the units are not sorted
-func NewTimeAggregator(units ...unit) (*TimeAggregator, error) {
+func NewTimeAggregator(units ...Unit) (*TimeAggregator, error) {
 	if !unitsAreSorted(units) {
 		return nil, InvalidOrderError
 	}
@@ -123,7 +123,7 @@ type aggregator struct {
 	p      periodDefinition
 }
 
-func newAggregator(u unit) *aggregator {
+func newAggregator(u Unit) *aggregator {
 	return &aggregator{
 		values: make([]int64, defs[u].size),
 		p:      defs[u],
@@ -175,8 +175,8 @@ func (a *aggregator) Unmarshal(r io.Reader) error {
 	return nil
 }
 
-func unitsAreSorted(units []unit) bool {
-	var p unit
+func unitsAreSorted(units []Unit) bool {
+	var p Unit
 	for _, u := range units {
 		if p != 0 && u < p {
 			return false
@@ -188,8 +188,8 @@ func unitsAreSorted(units []unit) bool {
 	return true
 }
 
-func unitsToFlag(units []unit) unit {
-	f := unit(0)
+func unitsToFlag(units []Unit) Unit {
+	f := Unit(0)
 	for _, u := range units {
 		f |= u
 	}
