@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 )
@@ -29,7 +30,7 @@ func NewTimeAggregator(units ...Unit) (*TimeAggregator, error) {
 	return &TimeAggregator{
 		Values: make(map[Period]*aggregator, 0),
 		kind:   units[len(units)-1],
-		flags:  unitsToFlag(units),
+		flags:  unitsToFlag(units[:len(units)-1]),
 	}, nil
 }
 
@@ -60,6 +61,7 @@ func (a *TimeAggregator) Sum(b *TimeAggregator) error {
 	if a.flags != b.flags {
 		return UnitsMismatch
 	}
+
 	for p, v := range b.Values {
 		if _, ok := a.Values[p]; !ok {
 			a.Values[p] = v
@@ -75,9 +77,15 @@ func (a *TimeAggregator) buildAggregator() *aggregator {
 	return newAggregator(a.kind)
 }
 
+var signature = []byte{'T', 'A'}
+
 // Marshal returns a binary representation of TimeAggregator
 func (a *TimeAggregator) Marshal() []byte {
 	buf := new(bytes.Buffer)
+	buf.Write(signature)
+
+	binary.Write(buf, binary.LittleEndian, int64(a.kind))
+	binary.Write(buf, binary.LittleEndian, int64(a.flags))
 
 	for p, v := range a.Values {
 		binary.Write(buf, binary.LittleEndian, p)
@@ -89,9 +97,31 @@ func (a *TimeAggregator) Marshal() []byte {
 
 // Unmarshal a binary string into a TimeAggregator, units and values are restored
 func (a *TimeAggregator) Unmarshal(v []byte) error {
-	a.Values = make(map[Period]*aggregator, 0)
-
 	buf := bytes.NewBuffer(v)
+
+	s := make([]byte, len(signature))
+	if _, err := buf.Read(s); err != nil {
+		return err
+	}
+
+	if string(s) != string(signature) {
+		return fmt.Errorf("Signature missmatch found %q", s)
+	}
+
+	var kind Unit
+	if err := binary.Read(buf, binary.LittleEndian, &kind); err != nil {
+		return err
+	}
+
+	var flags Unit
+	if err := binary.Read(buf, binary.LittleEndian, &flags); err != nil {
+		return err
+	}
+
+	a.Values = make(map[Period]*aggregator, 0)
+	a.kind = kind
+	a.flags = flags
+
 	for {
 		var p Period
 		if err := binary.Read(buf, binary.LittleEndian, &p); err != nil {
@@ -100,13 +130,6 @@ func (a *TimeAggregator) Unmarshal(v []byte) error {
 			}
 
 			return err
-		}
-
-		if a.flags == 0 {
-			a.flags = p.flag()
-			us := p.Units()
-
-			a.kind = us[len(us)-1]
 		}
 
 		a.Values[p] = a.buildAggregator()

@@ -60,7 +60,7 @@ func (s *UtilsSuite) TestTimeAggregator_Add_Only(c *C) {
 	h21 := time.Date(2015, time.November, 1, 21, 1, 1, 0, time.UTC)
 	a.Add(h21, 40)
 
-	c.Assert(a.Values, HasLen, 2)
+	c.Assert(a.Values, HasLen, 1)
 	c.Assert(a.Get(date2015November), Equals, int64(30))
 	c.Assert(a.Get(h21), Equals, int64(40))
 }
@@ -75,7 +75,7 @@ func (s *UtilsSuite) TestTimeAggregator_Sum(c *C) {
 	b.Add(date2015December, 10)
 
 	c.Assert(a.Sum(b), IsNil)
-	c.Assert(a.Values, HasLen, 3)
+	c.Assert(a.Values, HasLen, 2)
 	c.Assert(a.Get(date2015January), Equals, int64(10))
 	c.Assert(a.Get(date2014November), Equals, int64(10))
 	c.Assert(a.Get(date2015December), Equals, int64(20))
@@ -131,3 +131,4 @@ var date2014November = time.Date(2014, time.November, 12, 23, 59, 59, 0, time.UT
 var date2015January = time.Date(2015, time.January, 12, 23, 59, 59, 0, time.UTC)
 var date2015December = time.Date(2015, time.December, 12, 23, 59, 59, 0, time.UTC)
 var date2015November = time.Date(2015, time.November, 12, 23, 59, 59, 0, time.UTC)
+var date2015November21h = time.Date(2015, time.November, 12, 21, 59, 59, 0, time.UTC)

@@ -3,22 +3,20 @@ package aggregator
 import (
 	"bytes"
 	"encoding/gob"
-	"encoding/hex"
 	"encoding/json"
 
 	. "gopkg.in/check.v1"
-	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2"
 )
 
-var example = "c800000000094eb70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001400000000000000"
+var example = "544140000000000000000100000000000000c94db70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000"
 
 func (s *UtilsSuite) Test_TimeAggregator_GetBSON(c *C) {
 	a, _ := NewTimeAggregator(Year, Hour)
 	a.Add(date2013December, 10)
 
 	raw, err := a.GetBSON()
-
-	c.Assert(raw.([]byte), HasLen, 200)
+	c.Assert(raw.([]byte), HasLen, 218)
 	c.Assert(err, IsNil)
 }
 
@@ -38,30 +36,17 @@ func (s *UtilsSuite) Test_TimeAggregator_GetBSON_empty(c *C) {
 	c.Assert(err, IsNil)
 }
 
-func (s *UtilsSuite) Test_TimeAggregator_SetBSON(c *C) {
-	a, _ := NewTimeAggregator(Year, Hour)
-	a.Add(date2013December, 10)
-
-	raw := bson.Raw{}
-	raw.Kind = 5
-	raw.Data, _ = hex.DecodeString(example)
-
-	b := &TimeAggregator{}
-	err := b.SetBSON(raw)
-	c.Assert(err, IsNil)
-	c.Assert(b.Values, HasLen, 1)
-}
-
 func (s *UtilsSuite) Test_TimeAggregator_MarshalJSON(c *C) {
 	a, _ := NewTimeAggregator(Year, Hour)
-	a.Add(date2013December, 10)
+	a.Add(date2015December, 10)
+	a.Add(date2015November21h, 10)
 
 	b, err := json.Marshal(a)
 	c.Assert(err, IsNil)
 	c.Assert(
 		string(b),
 		Equals,
-		`[[{"hour":23,"year":2013},[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10]]]`,
+		`[[{"year":2015},[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,0,10]]]`,
 	)
 }
 
@@ -92,4 +77,29 @@ func (s *UtilsSuite) Test_TimeAggregator_Gob(c *C) {
 		c.Assert(a.p.name, DeepEquals, ta1.Values[p].p.name)
 		c.Assert(a.p.zero, DeepEquals, ta1.Values[p].p.zero)
 	}
+}
+
+func (s *UtilsSuite) TestIntegration(c *C) {
+	session, err := mgo.Dial("localhost")
+	db := session.DB("TimeAggregatorTest")
+	defer db.DropDatabase()
+
+	c.Assert(err, IsNil)
+	collection := db.C("collection")
+
+	a, _ := NewTimeAggregator(Year, Hour)
+	a.Add(date2014November, 15)
+	a.Add(date2015November, 10)
+	a.Add(date2015December, 10)
+
+	err = collection.Insert(struct{ A *TimeAggregator }{A: a})
+	c.Assert(err, IsNil)
+
+	r := struct{ A *TimeAggregator }{}
+	err = collection.Find(nil).One(&r)
+	c.Assert(err, IsNil)
+
+	c.Assert(r.A.Values, HasLen, 2)
+	c.Assert(r.A.Get(date2015January), Equals, int64(20))
+	c.Assert(r.A.Get(date2014February), Equals, int64(15))
 }

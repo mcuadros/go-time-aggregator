@@ -2,7 +2,7 @@ package aggregator
 
 import "time"
 
-type Unit int
+type Unit int64
 
 const (
 	Year Unit = 1 << iota
