@@ -81,6 +81,27 @@ func (s *TimeAggregatorSuite) TestSum(c *C) {
 	c.Assert(a.Get(date2015December), Equals, int64(20))
 }
 
+func (s *TimeAggregatorSuite) TestEntries(c *C) {
+	a, _ := NewTimeAggregator(Year, Month)
+	a.Add(date2014November, 10)
+	a.Add(date2015December, 15)
+	a.Add(date2013December, 25)
+
+	e := a.Entries()
+	c.Assert(e, HasLen, 3)
+	c.Assert(e[0].Period["year"], Equals, uint64(2013))
+	c.Assert(e[0].Period["month"], Equals, uint64(11))
+	c.Assert(e[0].Value, Equals, int64(25))
+
+	c.Assert(e[1].Period["year"], Equals, uint64(2014))
+	c.Assert(e[1].Period["month"], Equals, uint64(10))
+	c.Assert(e[1].Value, Equals, int64(10))
+
+	c.Assert(e[2].Period["year"], Equals, uint64(2015))
+	c.Assert(e[2].Period["month"], Equals, uint64(11))
+	c.Assert(e[2].Value, Equals, int64(15))
+}
+
 func (s *TimeAggregatorSuite) TestMarshalAndUnmarshalHour(c *C) {
 	d := time.Now()
 

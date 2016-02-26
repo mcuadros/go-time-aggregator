@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"time"
 )
 
@@ -71,6 +72,28 @@ func (a *TimeAggregator) Sum(b *TimeAggregator) error {
 	}
 
 	return nil
+}
+
+type Entry struct {
+	Period map[string]uint64
+	Value  int64
+}
+
+// Entries return a list of Entry structs with non-zero values
+func (a *TimeAggregator) Entries() []Entry {
+	var o []Entry
+
+	var periods Periods
+	for i := range a.Values {
+		periods = append(periods, i)
+	}
+
+	sort.Sort(periods)
+	for _, p := range periods {
+		o = append(o, a.Values[p].entries(p)...)
+	}
+
+	return o
 }
 
 func (a *TimeAggregator) buildAggregator() *aggregator {
@@ -175,6 +198,24 @@ func (a *aggregator) Sum(b *aggregator) {
 	for i, value := range b.values {
 		a.values[i] += value
 	}
+}
+
+func (a *aggregator) entries(p Period) []Entry {
+	var o []Entry
+	m := p.ToMap()
+
+	for i, v := range a.values {
+		if v == 0 {
+			continue
+		}
+
+		e := Entry{Period: m, Value: v}
+		e.Period[a.p.name] = uint64(i)
+
+		o = append(o, e)
+	}
+
+	return o
 }
 
 func (a *aggregator) Marshal() []byte {

@@ -162,3 +162,9 @@ func getUnitsFromFlag(flag Unit) []Unit {
 
 	return us
 }
+
+type Periods []Period
+
+func (p Periods) Len() int           { return len(p) }
+func (p Periods) Less(i, j int) bool { return p[i] < p[j] }
+func (p Periods) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
