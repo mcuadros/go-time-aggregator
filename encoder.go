@@ -37,7 +37,7 @@ func (a *TimeAggregator) MarshalJSON() ([]byte, error) {
 
 	i := 0
 	for p, a := range a.Values {
-		v[i] = []interface{}{p.ToMap(), a.values}
+		v[i] = []interface{}{p.Map(), a.values}
 		i++
 	}
 

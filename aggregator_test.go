@@ -102,6 +102,15 @@ func (s *TimeAggregatorSuite) TestEntries(c *C) {
 	c.Assert(e[2].Value, Equals, int64(15))
 }
 
+func (s *TimeAggregatorSuite) TestString(c *C) {
+	a, _ := NewTimeAggregator(Year, Month)
+	a.Add(date2014February, 40)
+	a.Add(date2014November, 10)
+	a.Add(date2015November, 10)
+
+	c.Assert(a.String(), Equals, "Year: 2014\t▁█▁▁▁▁▁▁▁▁▃▁  months\nYear: 2015\t▁▁▁▁▁▁▁▁▁▁█▁  months\n")
+}
+
 func (s *TimeAggregatorSuite) TestMarshalAndUnmarshalHour(c *C) {
 	d := time.Now()
 

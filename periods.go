@@ -1,8 +1,16 @@
 package aggregator
 
-import "time"
+import (
+	"fmt"
+	"strings"
+	"time"
+)
 
 type Unit int64
+
+func (u Unit) String() string {
+	return defs[u].name
+}
 
 const (
 	Year Unit = 1 << iota
@@ -123,7 +131,7 @@ func newPeriod(flag Unit, date time.Time) Period {
 }
 
 // ToMap returns a map representation of this period
-func (p Period) ToMap() map[string]uint64 {
+func (p Period) Map() map[string]uint64 {
 	t := uint64(p)
 
 	us := p.Units()
@@ -150,6 +158,19 @@ func (p Period) flag() Unit {
 // Units returns a slice of the units of the period
 func (p Period) Units() []Unit {
 	return getUnitsFromFlag(p.flag())
+}
+
+func (p Period) String() string {
+	m := p.Map()
+
+	var s []string
+	for _, u := range p.Units() {
+		s = append(s,
+			fmt.Sprintf("%s: %d", strings.Title(u.String()), m[u.String()]),
+		)
+	}
+
+	return strings.Join(s, " / ")
 }
 
 func getUnitsFromFlag(flag Unit) []Unit {

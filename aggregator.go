@@ -8,6 +8,8 @@ import (
 	"io"
 	"sort"
 	"time"
+
+	"github.com/joliv/spark"
 )
 
 var (
@@ -164,6 +166,23 @@ func (a *TimeAggregator) Unmarshal(v []byte) error {
 	return nil
 }
 
+func (a *TimeAggregator) String() string {
+	var periods Periods
+	for i := range a.Values {
+		periods = append(periods, i)
+	}
+
+	sort.Sort(periods)
+
+	var o string
+	for _, p := range periods {
+		o += fmt.Sprintf("%s\t%s  %ss\n", p, a.Values[p], a.Values[p].p.name)
+	}
+
+	return o
+
+}
+
 type aggregator struct {
 	values []int64
 	p      periodDefinition
@@ -202,7 +221,7 @@ func (a *aggregator) Sum(b *aggregator) {
 
 func (a *aggregator) entries(p Period) []Entry {
 	var o []Entry
-	m := p.ToMap()
+	m := p.Map()
 
 	for i, v := range a.values {
 		if v == 0 {
@@ -237,6 +256,15 @@ func (a *aggregator) Unmarshal(r io.Reader) error {
 	}
 
 	return nil
+}
+
+func (a *aggregator) String() string {
+	values := make([]float64, len(a.values))
+	for i, v := range a.values {
+		values[i] = float64(v)
+	}
+
+	return spark.Line(values)
 }
 
 func unitsAreSorted(units []Unit) bool {
