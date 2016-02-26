@@ -11,7 +11,7 @@ import (
 
 var example = "544140000000000000000100000000000000c94db70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000"
 
-func (s *UtilsSuite) Test_TimeAggregator_GetBSON(c *C) {
+func (s *TimeAggregatorSuite) TestGetBSON(c *C) {
 	a, _ := NewTimeAggregator(Year, Hour)
 	a.Add(date2013December, 10)
 
@@ -20,7 +20,7 @@ func (s *UtilsSuite) Test_TimeAggregator_GetBSON(c *C) {
 	c.Assert(err, IsNil)
 }
 
-func (s *UtilsSuite) Test_TimeAggregator_GetBSON_nil(c *C) {
+func (s *TimeAggregatorSuite) TestGetBSON_nil(c *C) {
 	var a *TimeAggregator
 	raw, err := a.GetBSON()
 
@@ -28,7 +28,7 @@ func (s *UtilsSuite) Test_TimeAggregator_GetBSON_nil(c *C) {
 	c.Assert(err, IsNil)
 }
 
-func (s *UtilsSuite) Test_TimeAggregator_GetBSON_empty(c *C) {
+func (s *TimeAggregatorSuite) TestGetBSON_empty(c *C) {
 	a, _ := NewTimeAggregator(Month)
 	raw, err := a.GetBSON()
 
@@ -36,7 +36,7 @@ func (s *UtilsSuite) Test_TimeAggregator_GetBSON_empty(c *C) {
 	c.Assert(err, IsNil)
 }
 
-func (s *UtilsSuite) Test_TimeAggregator_MarshalJSON(c *C) {
+func (s *TimeAggregatorSuite) TestMarshalJSON(c *C) {
 	a, _ := NewTimeAggregator(Year, Hour)
 	a.Add(date2015December, 10)
 	a.Add(date2015November21h, 10)
@@ -50,7 +50,7 @@ func (s *UtilsSuite) Test_TimeAggregator_MarshalJSON(c *C) {
 	)
 }
 
-func (s *UtilsSuite) Test_TimeAggregator_Gob(c *C) {
+func (s *TimeAggregatorSuite) TestGob(c *C) {
 	ta1, _ := NewTimeAggregator(Year, Hour)
 	ta1.Add(date2013December, 10)
 
@@ -79,7 +79,7 @@ func (s *UtilsSuite) Test_TimeAggregator_Gob(c *C) {
 	}
 }
 
-func (s *UtilsSuite) TestIntegration(c *C) {
+func (s *TimeAggregatorSuite) TestIntegration(c *C) {
 	session, err := mgo.Dial("localhost")
 	db := session.DB("TimeAggregatorTest")
 	defer db.DropDatabase()

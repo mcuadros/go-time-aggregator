@@ -9,16 +9,16 @@ import (
 
 func Test(t *testing.T) { TestingT(t) }
 
-type UtilsSuite struct{}
+type TimeAggregatorSuite struct{}
 
-var _ = Suite(&UtilsSuite{})
+var _ = Suite(&TimeAggregatorSuite{})
 
-func (s *UtilsSuite) TestNewTimeAggregator(c *C) {
+func (s *TimeAggregatorSuite) TestNewTimeAggregator(c *C) {
 	_, err := NewTimeAggregator(Hour, Year)
 	c.Assert(err, Equals, InvalidOrderError)
 }
 
-func (s *UtilsSuite) TestTimeAggregator_Add_YearHour(c *C) {
+func (s *TimeAggregatorSuite) TestAdd_YearHour(c *C) {
 	a, _ := NewTimeAggregator(Year, Hour)
 	a.Add(date2014November, 15)
 	a.Add(date2015November, 10)
@@ -29,7 +29,7 @@ func (s *UtilsSuite) TestTimeAggregator_Add_YearHour(c *C) {
 	c.Assert(a.Get(date2014February), Equals, int64(15))
 }
 
-func (s *UtilsSuite) TestTimeAggregator_Add_MonthHour(c *C) {
+func (s *TimeAggregatorSuite) TestAdd_MonthHour(c *C) {
 	a, _ := NewTimeAggregator(Month, Hour)
 	a.Add(date2014November, 15)
 	a.Add(date2015November, 10)
@@ -40,7 +40,7 @@ func (s *UtilsSuite) TestTimeAggregator_Add_MonthHour(c *C) {
 	c.Assert(a.Get(date2013December), Equals, int64(10))
 }
 
-func (s *UtilsSuite) TestTimeAggregator_Add_YearMonthHour(c *C) {
+func (s *TimeAggregatorSuite) TestAdd_YearMonthHour(c *C) {
 	a, _ := NewTimeAggregator(Year, Month, Hour)
 	a.Add(date2014November, 10)
 	a.Add(date2015November, 10)
@@ -51,7 +51,7 @@ func (s *UtilsSuite) TestTimeAggregator_Add_YearMonthHour(c *C) {
 	c.Assert(a.Get(date2015November), Equals, int64(50))
 }
 
-func (s *UtilsSuite) TestTimeAggregator_Add_Only(c *C) {
+func (s *TimeAggregatorSuite) TestAdd_Only(c *C) {
 	a, _ := NewTimeAggregator(Hour)
 	a.Add(date2014November, 10)
 	a.Add(date2015November, 10)
@@ -65,7 +65,7 @@ func (s *UtilsSuite) TestTimeAggregator_Add_Only(c *C) {
 	c.Assert(a.Get(h21), Equals, int64(40))
 }
 
-func (s *UtilsSuite) TestTimeAggregator_Sum(c *C) {
+func (s *TimeAggregatorSuite) TestSum(c *C) {
 	a, _ := NewTimeAggregator(Year, Month)
 	a.Add(date2014November, 10)
 	a.Add(date2015December, 10)
@@ -81,7 +81,7 @@ func (s *UtilsSuite) TestTimeAggregator_Sum(c *C) {
 	c.Assert(a.Get(date2015December), Equals, int64(20))
 }
 
-func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshalHour(c *C) {
+func (s *TimeAggregatorSuite) TestMarshalAndUnmarshalHour(c *C) {
 	d := time.Now()
 
 	a, _ := NewTimeAggregator(Year, Hour)
@@ -102,7 +102,7 @@ func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshalHour(c *C) {
 	c.Assert(b.Get(d), Equals, int64(20))
 }
 
-func (s *UtilsSuite) TestTimeAggregator_MarshalAndUnmarshalYearday(c *C) {
+func (s *TimeAggregatorSuite) TestMarshalAndUnmarshalYearday(c *C) {
 	d := time.Date(2016, time.December, 31, 23, 59, 59, 0, time.UTC)
 
 	a, _ := NewTimeAggregator(Year, YearDay)
