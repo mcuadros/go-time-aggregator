@@ -52,7 +52,7 @@ func (a *TimeAggregator) Get(date time.Time) int64 {
 	p := newPeriod(a.flags, date)
 
 	if _, ok := a.Values[p]; !ok {
-		return -1
+		return 0
 	}
 
 	return a.Values[p].Get(date)

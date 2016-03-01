@@ -23,8 +23,8 @@ func (s *TimeAggregatorSuite) TestGetConsistency(c *C) {
 	a.Add(date2015January1, 1)
 
 	c.Assert(a.Get(date2015January1), Equals, int64(1))
-	c.Assert(a.Get(date2015January2), Equals, int64(-1))
-	c.Assert(a.Get(date2016January1), Equals, int64(-1))
+	c.Assert(a.Get(date2015January2), Equals, int64(0))
+	c.Assert(a.Get(date2016January1), Equals, int64(0))
 }
 
 func (s *TimeAggregatorSuite) TestAdd_YearHour(c *C) {
