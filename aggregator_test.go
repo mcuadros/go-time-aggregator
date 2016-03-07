@@ -18,6 +18,15 @@ func (s *TimeAggregatorSuite) TestNewTimeAggregator(c *C) {
 	c.Assert(err, Equals, InvalidOrderError)
 }
 
+func (s *TimeAggregatorSuite) TestGetConsistency(c *C) {
+	a, _ := NewTimeAggregator(Year, YearDay)
+	a.Add(date2015January1, 1)
+
+	c.Assert(a.Get(date2015January1), Equals, int64(1))
+	c.Assert(a.Get(date2015January2), Equals, int64(0))
+	c.Assert(a.Get(date2016January1), Equals, int64(0))
+}
+
 func (s *TimeAggregatorSuite) TestAdd_YearHour(c *C) {
 	a, _ := NewTimeAggregator(Year, Hour)
 	a.Add(date2014November, 15)
@@ -162,3 +171,6 @@ var date2015January = time.Date(2015, time.January, 12, 23, 59, 59, 0, time.UTC)
 var date2015December = time.Date(2015, time.December, 12, 23, 59, 59, 0, time.UTC)
 var date2015November = time.Date(2015, time.November, 12, 23, 59, 59, 0, time.UTC)
 var date2015November21h = time.Date(2015, time.November, 12, 21, 59, 59, 0, time.UTC)
+var date2015January1 = time.Date(2015, time.January, 1, 12, 0, 0, 0, time.UTC)
+var date2015January2 = time.Date(2015, time.January, 2, 12, 0, 0, 0, time.UTC)
+var date2016January1 = time.Date(2016, time.January, 1, 12, 0, 0, 0, time.UTC)
