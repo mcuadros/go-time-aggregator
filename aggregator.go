@@ -184,13 +184,13 @@ func (a *TimeAggregator) String() string {
 }
 
 type aggregator struct {
-	values []int64
+	values map[int]int64
 	p      periodDefinition
 }
 
 func newAggregator(u Unit) *aggregator {
 	return &aggregator{
-		values: make([]int64, defs[u].size),
+		values: make(map[int]int64, 0),
 		p:      defs[u],
 	}
 }
@@ -240,7 +240,9 @@ func (a *aggregator) entries(p Period) []Entry {
 func (a *aggregator) Marshal() []byte {
 	buf := new(bytes.Buffer)
 
-	for _, v := range a.values {
+	size := int(a.p.size)
+	for i := 0; i < size; i++ {
+		v := a.values[i]
 		binary.Write(buf, binary.LittleEndian, v)
 	}
 
@@ -248,10 +250,16 @@ func (a *aggregator) Marshal() []byte {
 }
 
 func (a *aggregator) Unmarshal(r io.Reader) error {
-	for i, _ := range a.values {
-		err := binary.Read(r, binary.LittleEndian, &a.values[i])
+	size := int(a.p.size)
+	for i := 0; i < size; i++ {
+		var v int64
+		err := binary.Read(r, binary.LittleEndian, &v)
 		if err != nil {
 			return err
+		}
+
+		if v != 0 {
+			a.values[i] = v
 		}
 	}
 
@@ -259,8 +267,11 @@ func (a *aggregator) Unmarshal(r io.Reader) error {
 }
 
 func (a *aggregator) String() string {
-	values := make([]float64, len(a.values))
-	for i, v := range a.values {
+	values := make([]float64, a.p.size)
+
+	size := int(a.p.size)
+	for i := 0; i < size; i++ {
+		v := a.values[i]
 		values[i] = float64(v)
 	}
 
