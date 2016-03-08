@@ -82,7 +82,7 @@ type Entry struct {
 }
 
 // Entries return a list of Entry structs with non-zero values
-func (a *TimeAggregator) Entries() []Entry {
+func (a *TimeAggregator) Entries() ([]Entry, error) {
 	var o []Entry
 
 	var periods Periods
@@ -92,10 +92,15 @@ func (a *TimeAggregator) Entries() []Entry {
 
 	sort.Sort(periods)
 	for _, p := range periods {
-		o = append(o, a.Values[p].entries(p)...)
+		e, err := a.Values[p].entries(p)
+		if err != nil {
+			return o, err
+		}
+
+		o = append(o, e...)
 	}
 
-	return o
+	return o, nil
 }
 
 func (a *TimeAggregator) buildAggregator() *aggregator {
@@ -219,9 +224,12 @@ func (a *aggregator) Sum(b *aggregator) {
 	}
 }
 
-func (a *aggregator) entries(p Period) []Entry {
+func (a *aggregator) entries(p Period) ([]Entry, error) {
 	var o []Entry
-	m := p.Map()
+	m, err := p.Map()
+	if err != nil {
+		return o, err
+	}
 
 	for i, v := range a.values {
 		if v == 0 {
@@ -234,7 +242,7 @@ func (a *aggregator) entries(p Period) []Entry {
 		o = append(o, e)
 	}
 
-	return o
+	return o, nil
 }
 
 func (a *aggregator) Marshal() []byte {

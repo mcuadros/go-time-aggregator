@@ -96,7 +96,8 @@ func (s *TimeAggregatorSuite) TestEntries(c *C) {
 	a.Add(date2015December, 15)
 	a.Add(date2013December, 25)
 
-	e := a.Entries()
+	e, err := a.Entries()
+	c.Assert(err, IsNil)
 	c.Assert(e, HasLen, 3)
 	c.Assert(e[0].Period["year"], Equals, uint64(2013))
 	c.Assert(e[0].Period["month"], Equals, uint64(11))

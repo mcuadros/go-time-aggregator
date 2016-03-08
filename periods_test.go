@@ -12,10 +12,15 @@ func (s *TimeAggregatorSuite) TestNewPeriod(c *C) {
 
 func (s *TimeAggregatorSuite) TestPeriodToMap(c *C) {
 	p := Period(1201511003)
-	c.Assert(p.Map(), DeepEquals, map[string]uint64{"year": 2015, "month": 11})
+	m, err := p.Map()
+	c.Assert(err, IsNil)
+
+	c.Assert(m, DeepEquals, map[string]uint64{"year": 2015, "month": 11})
 
 	p = Period(12015316017)
-	c.Assert(p.Map(), DeepEquals, map[string]uint64{"year": 2015, "yearday": 316})
+	m, err = p.Map()
+	c.Assert(err, IsNil)
+	c.Assert(m, DeepEquals, map[string]uint64{"year": 2015, "yearday": 316})
 }
 
 func (s *TimeAggregatorSuite) TestPeriodString(c *C) {

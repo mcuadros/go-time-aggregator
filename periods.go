@@ -131,7 +131,7 @@ func newPeriod(flag Unit, date time.Time) Period {
 }
 
 // ToMap returns a map representation of this period
-func (p Period) Map() map[string]uint64 {
+func (p Period) Map() (map[string]uint64, error) {
 	t := uint64(p)
 
 	us := p.Units()
@@ -145,10 +145,10 @@ func (p Period) Map() map[string]uint64 {
 	}
 
 	if t != binaryVersion {
-		panic("Malformed period")
+		return nil, fmt.Errorf("Malformed period")
 	}
 
-	return result
+	return result, nil
 }
 
 func (p Period) flag() Unit {
@@ -161,7 +161,10 @@ func (p Period) Units() []Unit {
 }
 
 func (p Period) String() string {
-	m := p.Map()
+	m, err := p.Map()
+	if err != nil {
+		return "<malformed-period>"
+	}
 
 	var s []string
 	for _, u := range p.Units() {
